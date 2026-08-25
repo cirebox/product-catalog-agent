@@ -117,8 +117,8 @@ pip install -e ".[dev]"
 
 ### 2. Configurar variáveis
 ```bash
-cp config/.env.example config/.env
-# Editar .env com suas configurações
+cp .env.example .env
+# Editar .env com sua OPENROUTER_API_KEY
 ```
 
 ### 3. Rodar demo (offline)

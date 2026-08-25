@@ -39,8 +39,8 @@ cd product-catalog-agent
 pip install -e ".[dev]"
 
 # Configure environment
-cp config/.env.example config/.env
-# Edit .env with your settings
+cp .env.example .env
+# Edit .env with your OpenRouter API key
 ```
 
 ### Run Demo
