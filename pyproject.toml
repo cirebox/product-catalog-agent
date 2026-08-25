@@ -1,0 +1,79 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "product-catalog-agent"
+version = "1.0.0"
+description = "LangGraph agent for lingerie product catalog customer service via RAG"
+authors = [{name = "Cirebox Team"}]
+dependencies = [
+    # Core
+    "langchain>=0.2.0",
+    "langchain-core>=0.2.0",
+    "langchain-openai>=0.1.0",
+    "langchain-community>=0.2.0",
+    "langgraph>=0.2.0",
+    # Vector store / RAG
+    "chromadb>=0.4.0",
+    "sentence-transformers>=2.2.0",
+    # Database
+    "aiosqlite>=0.19.0",
+    # Data validation
+    "pydantic>=2.0.0",
+    "pydantic-settings>=2.0.0",
+    "python-dotenv>=1.0.0",
+    "pyyaml>=6.0.0",
+    # HTTP / Networking
+    "requests>=2.31.0",
+    "httpx>=0.27.0",
+    # Server
+    "fastapi>=0.110.0",
+    "uvicorn[standard]>=0.27.0",
+    # Resilience
+    "tenacity>=8.0.0",
+]
+requires-python = ">=3.11"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.23.0",
+    "black>=23.0.0",
+    "isort>=5.12.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+python_classes = "Test*"
+python_functions = "test_*"
+addopts = "-v --tb=short"
+
+[tool.black]
+line-length = 88
+target-version = ['py311']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+line_length = 88
+known_first_party = ["src"]
+skip = ["__init__.py"]

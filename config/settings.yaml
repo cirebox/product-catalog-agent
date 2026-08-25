@@ -1,0 +1,44 @@
+# ============================================================================
+# Product Catalog Agent — Configuration
+# Non-sensitive configurations (secrets go in .env)
+# ============================================================================
+
+llm:
+  # OpenRouter free models (zero cost)
+  provider: "openrouter"
+  model: "openrouter/free"
+  temperature: 0.1
+  max_tokens: 1000
+  openrouter_base_url: "https://openrouter.ai/api/v1"
+
+chroma:
+  # ChromaDB vector store for RAG
+  persist_dir: "/data/chroma"
+  collection: "product_catalog"
+  embedding_model: "paraphrase-multilingual-MiniLM-L12-v2"
+
+sqlite:
+  # SQLite for sessions and history
+  db_path: "/data/sqlite/sessions.db"
+
+rag:
+  docs_dir: "docs"
+  csv_path: "assets/produtos.csv"
+  chunk_size: 500
+  chunk_overlap: 50
+
+agents:
+  max_iterations: 10
+  timeout: 30
+
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  json_output: false
+  # file_path: "logs/agents.log"
+
+server:
+  host: "0.0.0.0"
+  port: 8000
+  reload: false
+  cors_origins: "*"
