@@ -18,7 +18,7 @@ class LLMService:
     def __init__(self, config: Config) -> None:
         self._config = config
         self._api_key = os.getenv("OPENROUTER_API_KEY", "")
-        self._model = os.getenv("OPENROUTER_MODEL", "openrouter/free")
+        self._model = os.getenv("OPENROUTER_MODEL", "z-ai/glm-5.2:free")
         self._base_url = "https://openrouter.ai/api/v1"
 
     def _get_llm(self, max_tokens: int = 150, timeout: int = 30):
@@ -34,8 +34,13 @@ class LLMService:
             temperature=0.1,
             max_tokens=max_tokens,
             timeout=timeout,
+            max_retries=2,
             openai_api_key=self._api_key,
             base_url=self._base_url,
+            default_headers={
+                "HTTP-Referer": self._app_url,   # recomendado pelo OpenRouter para identificar a app
+                "X-Title": self._app_name,
+            },
             model_kwargs={
                 "provider": {"order": ["openrouter"]},
             },
@@ -54,13 +59,19 @@ class LLMService:
                 [
                     SystemMessage(
                         content=(
-                            "Você é o assistente de atendimento de uma loja de lingerie. "
-                            "Responda em português (PT-BR), de forma curta e amigável. "
-                            "Informe que houve um problema temporário e sugira tentar novamente."
+                            "Você é a Maria assistente de atendimento de uma loja de lingerie. "
+                            "Regras obrigatórias:\n"
+                            "- Responda sempre em português (PT-BR).\n"
+                            "- Seja curto e amigável: no máximo 2 frases.\n"
+                            "- Não explique detalhes técnicos do erro nem exponha informações internas do sistema.\n"
+                            "- Assuma a culpa pela falha (nunca culpe o cliente ou a mensagem enviada).\n\n"
+                            "Contexto: ocorreu um erro inesperado ao processar a solicitação do cliente. "
+                            "Informe brevemente que houve um problema temporário, peça desculpas e sugira tentar novamente "
+                            "em instantes ou reformular a mensagem."
                         )
                     ),
                     HumanMessage(
-                        content=f'O usuário disse: "{user_message}" e ocorreu um erro na operação.'
+                        content=f'O usuário enviou: "{user_message}" e ocorreu um erro ao processar essa solicitação.'
                     ),
                 ]
             )
@@ -96,12 +107,17 @@ class LLMService:
                 [
                     SystemMessage(
                         content=(
-                            "Você é o assistente de atendimento de uma loja de lingerie. "
-                            "Responda em português (PT-BR), de forma curta e amigável (máx 2 frases). "
-                            "O cliente enviou uma mensagem que não foi entendida. "
-                            "Use o histórico da conversa para sugerir o que ele pode querer. "
-                            "Se não houver contexto suficiente, pergunte educadamente o que ele precisa. "
-                            "Ofereça exemplos práticos como: ver produtos, consultar preço, guia de medidas."
+                            "Você é a Maria assistente de atendimento de uma loja de lingerie. "
+                            "Regras obrigatórias:\n"
+                            "- Responda sempre em português (PT-BR).\n"
+                            "- Seja curto, amigável e direto: no máximo 2 frases.\n"
+                            "- Nunca invente informações sobre produtos, preços ou prazos.\n\n"
+                            "Contexto: o cliente enviou uma mensagem que não foi compreendida. "
+                            "Use o histórico da conversa para inferir a intenção mais provável. "
+                            "Se o histórico não for suficiente para entender o que ele quer, "
+                            "pergunte educadamente o que ele precisa, sem tentar adivinhar.\n\n"
+                            "Sempre finalize oferecendo 2 ou 3 exemplos práticos do que você pode ajudar, "
+                            "como: ver produtos, consultar preço, ver guia de medidas ou falar sobre formas de pagamento."
                         )
                     ),
                     HumanMessage(

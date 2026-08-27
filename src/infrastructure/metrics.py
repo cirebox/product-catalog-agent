@@ -17,6 +17,7 @@ class RequestTrace:
     intent: str = ""
     start_time: float = field(default_factory=time.monotonic)
     latency_ms: float = 0
+    node_timings: Dict[str, float] = field(default_factory=dict)
     llm_calls: int = 0
     mcp_calls: int = 0
     cache_hits: int = 0
@@ -25,6 +26,20 @@ class RequestTrace:
     def finish(self) -> None:
         """Mark the trace as complete, calculating latency."""
         self.latency_ms = round((time.monotonic() - self.start_time) * 1000, 1)
+
+
+def _percentile(data: List[float], p: float) -> float:
+    """Calculate the p-th percentile of a sorted list."""
+    if not data:
+        return 0.0
+    sorted_data = sorted(data)
+    k = (len(sorted_data) - 1) * (p / 100)
+    f = int(k)
+    c = f + 1
+    if c >= len(sorted_data):
+        return round(sorted_data[-1], 1)
+    d = k - f
+    return round(sorted_data[f] + d * (sorted_data[c] - sorted_data[f]), 1)
 
 
 class MetricsCollector:
@@ -51,6 +66,70 @@ class MetricsCollector:
                 self._intent_counts[trace.intent] = (
                     self._intent_counts.get(trace.intent, 0) + 1
                 )
+
+    def latency_report(self) -> dict:
+        """Return detailed latency report with percentiles."""
+        with self._lock:
+            traces = list(self._traces)
+
+        if not traces:
+            return {
+                "total_requests": 0,
+                "percentiles": {"p50": 0, "p95": 0, "p99": 0},
+                "avg_latency_ms": 0,
+                "min_latency_ms": 0,
+                "max_latency_ms": 0,
+                "by_intent": {},
+                "by_node": {},
+            }
+
+        latencies = [t.latency_ms for t in traces if t.latency_ms > 0]
+
+        # Aggregate node timings
+        node_latencies: Dict[str, List[float]] = {}
+        for t in traces:
+            for node, dur in t.node_timings.items():
+                node_latencies.setdefault(node, []).append(dur)
+
+        by_node = {}
+        for node, durations in node_latencies.items():
+            by_node[node] = {
+                "count": len(durations),
+                "avg_ms": round(sum(durations) / len(durations), 1),
+                "p50": _percentile(durations, 50),
+                "p95": _percentile(durations, 95),
+                "min_ms": round(min(durations), 1),
+                "max_ms": round(max(durations), 1),
+            }
+
+        # Aggregate by intent
+        intent_latencies: Dict[str, List[float]] = {}
+        for t in traces:
+            if t.intent and t.latency_ms > 0:
+                intent_latencies.setdefault(t.intent, []).append(t.latency_ms)
+
+        by_intent = {}
+        for intent, durations in intent_latencies.items():
+            by_intent[intent] = {
+                "count": len(durations),
+                "avg_ms": round(sum(durations) / len(durations), 1),
+                "p50": _percentile(durations, 50),
+                "p95": _percentile(durations, 95),
+            }
+
+        return {
+            "total_requests": len(latencies),
+            "percentiles": {
+                "p50": _percentile(latencies, 50),
+                "p95": _percentile(latencies, 95),
+                "p99": _percentile(latencies, 99),
+            },
+            "avg_latency_ms": round(sum(latencies) / len(latencies), 1),
+            "min_latency_ms": round(min(latencies), 1),
+            "max_latency_ms": round(max(latencies), 1),
+            "by_intent": by_intent,
+            "by_node": by_node,
+        }
 
     def summary(self) -> dict:
         """Return aggregated metrics summary."""

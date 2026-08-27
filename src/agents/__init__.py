@@ -1,17 +1,15 @@
-"""VAMU Agents — Agents package."""
+"""Product Catalog Agent — Agents package."""
 
 from .base_agent import BaseAgent
-from .driver_agent import DriverAgent
+from .catalog_agent import CatalogAgent
 from .general_agent import GeneralAgent
-from .models import AgentResult
-from .points_agent import PointsAgent
-from .ride_agent import RideAgent
+from .sales_agent import SalesAgent
+from .support_agent import SupportAgent
 
 __all__ = [
-    "AgentResult",
     "BaseAgent",
-    "DriverAgent",
+    "CatalogAgent",
     "GeneralAgent",
-    "PointsAgent",
-    "RideAgent",
+    "SalesAgent",
+    "SupportAgent",
 ]

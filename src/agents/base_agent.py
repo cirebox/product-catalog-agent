@@ -15,8 +15,10 @@ class BaseAgent:
     Subclasses should override `_handlers` to map intents to handler methods.
     """
 
-    def __init__(self, mcp=None) -> None:
+    def __init__(self, mcp=None, **kwargs) -> None:
         self._mcp = mcp
+        self.name = kwargs.get("name", type(self).__name__)
+        self.description = kwargs.get("description", "")
 
     @property
     def _handlers(self) -> Dict[str, Callable]:
