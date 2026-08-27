@@ -1,1 +1,1 @@
-# Cirebox Agents package
+# Eric Agents package

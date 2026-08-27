@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "product-catalog-agent"
 version = "1.0.0"
 description = "LangGraph agent for lingerie product catalog customer service via RAG"
-authors = [{name = "Cirebox Team"}]
+authors = [{name = "Eric Pereira"}]
 dependencies = [
     # Core
     "langchain>=0.2.0",

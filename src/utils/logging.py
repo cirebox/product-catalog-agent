@@ -1,5 +1,5 @@
 """
-Logging configuration for Cirebox Agents.
+Logging configuration for Eric Agents.
 
 Provides structured logging with optional JSON output and file handler.
 """

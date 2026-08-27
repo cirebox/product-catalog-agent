@@ -187,8 +187,10 @@
             </div>
             <div class="modal-body">
                 <p class="text-muted text-sm">
-                    Formato: <code>ref,descrição,preço[,categoria,estoque,fabricante,material,tamanhos,custo,margem]</code><br>
-                    Ref existente será <strong>atualizada</strong>, nova será <strong>inserida</strong>.
+                    Formato: <code>ref,descrição,preço,estoque,fabricante,material,tamanho,categoria</code><br>
+                    Colunas opcionais: <code>category_id</code> (ignorado)<br>
+                    Ref existente será <strong>atualizada</strong>, nova será <strong>inserida</strong>.<br>
+                    Categorias são criadas automaticamente se não existirem.
                 </p>
                 <div class="form-group">
                     <label>Arquivo CSV</label>

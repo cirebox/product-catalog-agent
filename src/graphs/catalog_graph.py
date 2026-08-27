@@ -57,6 +57,7 @@ _INTENT_TO_AGENT: dict[Intent, str] = {
     Intent.ORDER_STATUS: "sales",
     Intent.TRACK_DELIVERY: "sales",
     Intent.NEW_ORDER: "sales",
+    Intent.SALES_REPORT: "sales",
     # Support
     Intent.RETURN_POLICY: "support",
     Intent.EXCHANGE: "support",
@@ -65,6 +66,8 @@ _INTENT_TO_AGENT: dict[Intent, str] = {
     Intent.GREETING: "general",
     Intent.HELP: "general",
     Intent.UNKNOWN: "general",
+    Intent.STORE_INFO: "general",
+    Intent.IDENTITY: "general",
 }
 
 MAX_ITERATIONS = 10
@@ -96,7 +99,7 @@ class CatalogGraph:
                 customer_service,
                 sale_service,
             ),
-            "sales": SalesAgent(rag_service),
+            "sales": SalesAgent(rag_service, sale_service),
             "support": SupportAgent(rag_service),
             "general": GeneralAgent(rag_service),
         }
@@ -147,7 +150,7 @@ class CatalogGraph:
 
         return workflow.compile()
 
-    def _classify_intent(self, state: AgentState) -> dict:
+    async def _classify_intent(self, state: AgentState) -> dict:
         """Classify the user message intent and fetch feedback context."""
         import time as _time
         node_start = _time.monotonic()
@@ -173,11 +176,8 @@ class CatalogGraph:
         )
 
         # Fetch feedback context for this intent
-        import asyncio
         try:
-            feedback_context = asyncio.run(
-                self.feedback_builder.build_context(intent.value)
-            )
+            feedback_context = await self.feedback_builder.build_context(intent.value)
         except Exception:
             feedback_context = ""
 
@@ -224,7 +224,7 @@ class CatalogGraph:
 
         return _INTENT_TO_AGENT.get(intent, "general")
 
-    def _handle_catalog(self, state: AgentState) -> dict:
+    async def _handle_catalog(self, state: AgentState) -> dict:
         """Handle catalog-related messages with feedback context."""
         import time as _time
         node_start = _time.monotonic()
@@ -236,7 +236,6 @@ class CatalogGraph:
             intent = Intent.UNKNOWN
 
         agent = self.agents["catalog"]
-        import asyncio
 
         # Build context with feedback
         context = state.get("context", {})
@@ -245,15 +244,13 @@ class CatalogGraph:
         if feedback_context:
             context["feedback_context"] = feedback_context
 
-        response = asyncio.run(
-            agent.handle(state["message"], intent, context)
-        )
+        response = await agent.handle(state["message"], intent, context)
 
         timings = dict(state.get("node_timings", {}))
         timings["agent"] = round((_time.monotonic() - node_start) * 1000, 1)
         return {"response": response, "node_timings": timings}
 
-    def _handle_sales(self, state: AgentState) -> dict:
+    async def _handle_sales(self, state: AgentState) -> dict:
         """Handle sales-related messages with feedback context."""
         import time as _time
         node_start = _time.monotonic()
@@ -265,22 +262,19 @@ class CatalogGraph:
             intent = Intent.UNKNOWN
 
         agent = self.agents["sales"]
-        import asyncio
 
         context = state.get("context", {})
         feedback_context = state.get("feedback_context", "")
         if feedback_context:
             context["feedback_context"] = feedback_context
 
-        response = asyncio.run(
-            agent.handle(state["message"], intent, context)
-        )
+        response = await agent.handle(state["message"], intent, context)
 
         timings = dict(state.get("node_timings", {}))
         timings["agent"] = round((_time.monotonic() - node_start) * 1000, 1)
         return {"response": response, "node_timings": timings}
 
-    def _handle_support(self, state: AgentState) -> dict:
+    async def _handle_support(self, state: AgentState) -> dict:
         """Handle support-related messages with feedback context."""
         import time as _time
         node_start = _time.monotonic()
@@ -292,22 +286,19 @@ class CatalogGraph:
             intent = Intent.UNKNOWN
 
         agent = self.agents["support"]
-        import asyncio
 
         context = state.get("context", {})
         feedback_context = state.get("feedback_context", "")
         if feedback_context:
             context["feedback_context"] = feedback_context
 
-        response = asyncio.run(
-            agent.handle(state["message"], intent, context)
-        )
+        response = await agent.handle(state["message"], intent, context)
 
         timings = dict(state.get("node_timings", {}))
         timings["agent"] = round((_time.monotonic() - node_start) * 1000, 1)
         return {"response": response, "node_timings": timings}
 
-    def _handle_general(self, state: AgentState) -> dict:
+    async def _handle_general(self, state: AgentState) -> dict:
         """Handle general messages with feedback context."""
         import time as _time
         node_start = _time.monotonic()
@@ -319,16 +310,13 @@ class CatalogGraph:
             intent = Intent.UNKNOWN
 
         agent = self.agents["general"]
-        import asyncio
 
         context = state.get("context", {})
         feedback_context = state.get("feedback_context", "")
         if feedback_context:
             context["feedback_context"] = feedback_context
 
-        response = asyncio.run(
-            agent.handle(state["message"], intent, context)
-        )
+        response = await agent.handle(state["message"], intent, context)
 
         timings = dict(state.get("node_timings", {}))
         timings["agent"] = round((_time.monotonic() - node_start) * 1000, 1)

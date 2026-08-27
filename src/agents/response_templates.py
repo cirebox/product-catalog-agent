@@ -10,6 +10,11 @@ que a conversa soe repetitiva/robotizada em interações consecutivas.
 import random
 
 from src.agents.intent_classifier import Intent
+from src.prompts.system_prompt import (
+    get_out_of_scope_response,
+    get_product_not_found_response,
+    get_store_info,
+)
 
 
 _TEMPLATES: dict[Intent, list[str]] = {
@@ -91,6 +96,19 @@ _TEMPLATES: dict[Intent, list[str]] = {
     ],
     Intent.GET_CUSTOMER_CREDIT: [
         "{context}",
+    ],
+    # Sales Report
+    Intent.SALES_REPORT: [
+        "Relatório de vendas:\n\n{context}",
+        "Aqui está o resumo das vendas:\n\n{context}",
+    ],
+    # Store Info
+    Intent.STORE_INFO: [
+        "Informações da loja:\n\n{context}",
+    ],
+    # Identity
+    Intent.IDENTITY: [
+        "Sobre mim:\n\n{context}",
     ],
 }
 

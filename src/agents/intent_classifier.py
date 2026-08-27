@@ -22,6 +22,7 @@ class Intent(Enum):
     ORDER_STATUS = "order_status"
     TRACK_DELIVERY = "track_delivery"
     NEW_ORDER = "new_order"
+    SALES_REPORT = "sales_report"
 
     # Ações do PDV (backoffice)
     LOOKUP_CUSTOMER = "lookup_customer"
@@ -39,6 +40,10 @@ class Intent(Enum):
     GREETING = "greeting"
     HELP = "help"
     UNKNOWN = "unknown"
+
+    # Informações da loja
+    STORE_INFO = "store_info"
+    IDENTITY = "identity"
 
 
 def _normalize(text: str) -> str:
@@ -68,6 +73,13 @@ _INTENT_PATTERNS: dict[Intent, list[str]] = {
         r"qtd(?:ade)?\s+de\s+produtos?\b",
         r"total\s+de\s+produtos?\b",
         r"numero\s+de\s+produtos?\b",
+        # Contagem por categoria
+        r"quantas?\s+(?:calcinhas?|cuecas?|suti[aã]ns?|suti[aã]s?|camisetas?|camisolinhas?|pijamas?|meias?|acessorios?|bodys?|conjuntos?|body)\b",
+        r"quantos?\s+(?:itens?|pecas?)\s+(?:de|na)\s+(?:categoria|calcinha|cueca|suti[aã]n|suti[aã]|camiseta|pijama|meia|acessorio|body|conjunto)\b",
+        r"temos?\s+(?:quantas?|quantos?)\s+(?:calcinhas?|cuecas?|suti[aã]ns?|suti[aã]s?|camisetas?|pijamas?|meias?|acessorios?|bodys?|conjuntos?)\b",
+        r"quantos?\s+(?:calcinhas?|cuecas?|suti[aã]ns?|suti[aã]s?|camisetas?|camisolinhas?|pijamas?|meias?|acessorios?|bodys?|conjuntos?|body)\b",
+        # Follow-ups curtos (ex: "E pijamas?")
+        r"^e\s+(?:calcinhas?|cuecas?|suti[aã]ns?|suti[aã]s?|camisetas?|camisolinhas?|pijamas?|meias?|acessorios?|bodys?|conjuntos?|body)\b",
     ],
     Intent.PRODUCT_INFO: [
         r"\bprodutos?\b",
@@ -141,6 +153,15 @@ _INTENT_PATTERNS: dict[Intent, list[str]] = {
         r"colocar\s+no\s+carrinho",
         r"\blevar\b",
         r"quero\s+comprar",
+    ],
+    Intent.SALES_REPORT: [
+        r"quantas?\s+vendas?\s+(?:pendentes?|hoje|do\s+dia|foram|feitas?)\b",
+        r"quanto\s+(?:faturamos?|vendemos?|rendeu|recebemos?|lucramos?)\b",
+        r"\bfaturamento\b",
+        r"vendas?\s+de\s+hoje",
+        r"relatorio\s+(?:do\s+)?dia",
+        r"resumo\s+de\s+vendas",
+        r"total\s+de\s+vendas",
     ],
     # Ações do PDV
     Intent.LOOKUP_CUSTOMER: [
@@ -234,6 +255,35 @@ _INTENT_PATTERNS: dict[Intent, list[str]] = {
         r"\bmenu\b",
         r"\bcomandos?\b",
         r"\bajudar\b",
+    ],
+    Intent.STORE_INFO: [
+        r"onde\s+(?:fica|esta|localiza)",
+        r"\bendereco\b",
+        r"\bendere[co]+\b",
+        r"\blocalizacao\b",
+        r"\blocaliza[çc]+ao\b",
+        r"\bcep\b",
+        r"\brua\b",
+        r"\bavenida\b",
+        r"\bbairro\b",
+        r"\bcidade\b",
+        r"\bestado\b",
+        r"\bloja\b.*\d+",
+        r"qual\s+(?:o\s+)?endereco",
+        r"onde\s+voc[eê]\s+est[aá]",
+        r"em\s+que\s+(?:lugar|cidade|bairro)",
+    ],
+    Intent.IDENTITY: [
+        r"qual\s+(?:seu|teu|o\s+seu|o\s+teu)\s+nome",
+        r"quem\s+(?:e|eh|voce|vc)\b",
+        r"como\s+(?:voce|vc)\s+se\s+chama",
+        r"seu\s+nome",
+        r"teu\s+nome",
+        r"qual\s+seu\s+nome",
+        r"voce\s+e\s+quem",
+        r"vc\s+e\s+quem",
+        r"me\s+apresente",
+        r"se\s+apresente",
     ],
 }
 

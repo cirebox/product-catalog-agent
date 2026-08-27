@@ -174,6 +174,22 @@ class RAGService:
         logger.info("Indexed %d products (%d chunks) into ChromaDB", len(products), len(chunks))
         return len(chunks)
 
+    def reindex_all(self, products: List[dict]) -> int:
+        """Reindex all products in ChromaDB. Returns chunk count.
+
+        This is a convenience method that clears the existing collection
+        and reindexes all products from the provided list.
+        """
+        if not products:
+            logger.warning("reindex_all called with empty products list")
+            return 0
+
+        # Clear existing collection before full reindex
+        self._clear_collection()
+
+        # Reindex using the existing method
+        return self.load_products_from_sqlite(products)
+
     def reindex_product(self, product: dict) -> None:
         """Reindex a single product in ChromaDB (add or update)."""
         ref = product.get("ref", "")

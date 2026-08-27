@@ -754,7 +754,7 @@ def create_app() -> FastAPI:
 
         content = await file.read()
         try:
-            csv_text = content.decode("utf-8")
+            csv_text = content.decode("utf-8-sig")  # utf-8-sig remove BOM automaticamente
         except UnicodeDecodeError:
             csv_text = content.decode("latin-1")
 
@@ -762,7 +762,8 @@ def create_app() -> FastAPI:
 
         # Reindex all products in RAG
         if _rag_service:
-            _rag_service.reindex_all()
+            all_products = await _product_service.list_all_active()
+            _rag_service.reindex_all(all_products)
 
         return result
 

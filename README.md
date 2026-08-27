@@ -1,19 +1,23 @@
 # Product Catalog Agent
 
-Agent conversacional para atendimento de clientes de uma loja de lingerie. O sistema combina classificação determinística de intenção, LangGraph, recuperação semântica com ChromaDB e serviços de catálogo, clientes, vendas e histórico em SQLite.
+Agente de IA para atendimento interno (backoffice) de uma loja de lingerie. O sistema auxilia o time de vendas e operações com consultas de produtos, preços, estoque, pedidos, clientes e relatórios — tudo via interface conversacional em português.
+
+O agente combina classificação determinística de intenção, LangGraph, recuperação semântica com ChromaDB e serviços de catálogo, clientes, vendas e histórico em SQLite.
 
 As respostas dos agentes são em PT-BR. A integração com OpenRouter está encapsulada em `LLMService` para chamadas `ChatOpenAI`, incluindo prompts de fallback e clarificação contextual. O fluxo principal atual ainda usa templates determinísticos para as respostas dos agentes; o serviço de LLM está preparado para os cenários que o adotarem.
 
 ## Funcionalidades
 
-- Informações, preços, estoque, tamanhos e recomendações de produtos
-- Roteamento por intenção com 4 agentes especializados
+- Consulta de produtos, preços, estoque, tamanhos e recomendações
+- Contagem de produtos por categoria
+- Roteamento por intenção com 4 agentes especializados (Catálogo, Vendas, Suporte, Geral)
 - RAG com ChromaDB persistente e embeddings multilíngues
-- Persistência de sessões, mensagens, clientes, vendas e feedback em SQLite
-- Histórico recuperável por `session_id` após recarregar a interface
-- Memória de curto prazo com as últimas 10 mensagens para perguntas de acompanhamento
+- Relatórios de vendas (pendentes, faturamento do dia)
+- Informações da loja (endereço, formas de pagamento)
+- Cadastro e consulta de clientes
+- Registro de vendas e pagamentos
+- Persistência de sessões, mensagens e feedback em SQLite
 - API REST com FastAPI e interface web em `static/`
-- Reindexação da base de conhecimento por Server-Sent Events
 
 ## Arquitetura resumida
 
@@ -301,4 +305,4 @@ O VS Code inclui configurações de debug em `.vscode/launch.json` para `main.py
 
 ## Licença
 
-Privado — Cirebox Team.
+Privado — Eric Pereira.

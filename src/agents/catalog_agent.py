@@ -40,7 +40,7 @@ class CatalogAgent(BaseAgent):
 
         # Catálogo
         if intent == Intent.PRODUCT_COUNT:
-            return await self._product_count()
+            return await self._product_count(message)
         elif intent == Intent.PRODUCT_INFO:
             return await self._product_info(message, context)
         elif intent == Intent.PRICING:
@@ -71,14 +71,67 @@ class CatalogAgent(BaseAgent):
 
     # --- Catálogo ---
 
-    async def _product_count(self) -> str:
-        """Retorna a quantidade atual de produtos ativos."""
+    async def _product_count(self, message: str = "") -> str:
+        """Retorna a quantidade de produtos, opcionalmente filtrando por categoria."""
         if not self.product_service:
             return "Não consegui consultar o total de produtos agora."
 
+        # Extrair categoria da mensagem
+        category = self._extract_category(message)
+        
+        if category:
+            count = await self.product_service.count_by_category(category)
+            logger.info("Contagem de produtos por categoria: categoria=%s, total=%d", category, count)
+            if count == 0:
+                return f"Não encontrei **{category}** no catálogo. Quer ver outras categorias?"
+            return f"Temos **{count} {category}** no catálogo."
+        
         count = await self.product_service.count()
         logger.info("Contagem de produtos consultada: total=%d", count)
         return f"Temos **{count} produtos** cadastrados no catálogo."
+
+    def _extract_category(self, message: str) -> str:
+        """Extrai nome da categoria da mensagem."""
+        import unicodedata
+        
+        # Categorias conhecidas
+        categories = {
+            "calcinha": "calcinhas",
+            "calcinhas": "calcinhas",
+            "cueca": "cuecas",
+            "cuecas": "cuecas",
+            "sutiã": "sutiãs",
+            "sutiãs": "sutiãs",
+            "sutian": "sutiãs",
+            "sutians": "sutiãs",
+            "camiseta": "camisetas",
+            "camisetas": "camisetas",
+            "camisolinha": "camisolinhas",
+            "camisolinhas": "camisolinhas",
+            "pijama": "pijamas",
+            "pijamas": "pijamas",
+            "meia": "meias",
+            "meias": "meias",
+            "acessorio": "acessórios",
+            "acessórios": "acessórios",
+            "acessorios": "acessórios",
+            "body": "bodys",
+            "bodys": "bodys",
+            "conjunto": "conjuntos",
+            "conjuntos": "conjuntos",
+        }
+        
+        # Normalizar mensagem
+        text = message.strip().lower()
+        decomposed = unicodedata.normalize("NFKD", text)
+        text = "".join(ch for ch in decomposed if not unicodedata.combining(ch))
+        
+        # Procurar por categorias na mensagem
+        for pattern, category_name in categories.items():
+            if pattern in text:
+                return category_name
+        
+        return ""
 
     async def _product_info(self, message: str, context: dict) -> str:
         """Busca informações do produto por referência ou via RAG."""

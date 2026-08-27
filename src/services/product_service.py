@@ -245,6 +245,16 @@ class ProductService:
             ) as cursor:
                 return (await cursor.fetchone())[0]
 
+    async def count_by_category(self, category: str) -> int:
+        """Conta produtos ativos de uma categoria específica."""
+        category_lower = _remove_accents(category.lower().strip())
+        async with aiosqlite.connect(self.db_path) as db:
+            async with db.execute(
+                "SELECT COUNT(*) FROM products WHERE deleted_at IS NULL AND LOWER(category) = ?",
+                (category_lower,),
+            ) as cursor:
+                return (await cursor.fetchone())[0]
+
     async def list_all_active(self) -> List[dict]:
         """Retorna todos os produtos ativos (para RAG indexing)."""
         async with aiosqlite.connect(self.db_path) as db:
@@ -261,12 +271,16 @@ class ProductService:
 
     async def upsert_from_csv(self, csv_content: str) -> dict:
         """Importa CSV fazendo update ou insert pelo ref.
-        Formato CSV: ref,description,price[,category,stock,manufacturer,material,size,cost_price,margin]
+        Formato CSV: ref,description,price,stock,manufacturer,material,size,category[,category_id]
         Retorna {created, updated, errors}.
         """
         created = 0
         updated = 0
         errors = []
+
+        # Remover BOM se presente
+        if csv_content and csv_content[0] == '\ufeff':
+            csv_content = csv_content[1:]
 
         reader = csv.reader(io.StringIO(csv_content), delimiter=",", quotechar='"')
         for i, row in enumerate(reader, 1):
@@ -277,13 +291,11 @@ class ProductService:
             ref = row[0].strip()
             desc = row[1].strip()
             price_str = row[2].strip().replace(",", ".")
-            category = row[3].strip() if len(row) > 3 else ""
-            stock_str = row[4].strip() if len(row) > 4 else "0"
-            manufacturer = row[5].strip() if len(row) > 5 else ""
-            material = row[6].strip() if len(row) > 6 else ""
-            size = row[7].strip() if len(row) > 7 else ""
-            cost_price_str = row[8].strip() if len(row) > 8 else "0"
-            margin_str = row[9].strip() if len(row) > 9 else "0"
+            stock_str = row[3].strip() if len(row) > 3 else "0"
+            manufacturer = row[4].strip() if len(row) > 4 else ""
+            material = row[5].strip() if len(row) > 5 else ""
+            size = row[6].strip() if len(row) > 6 else ""
+            category = row[7].strip() if len(row) > 7 else ""
 
             try:
                 price = float(price_str)
@@ -296,19 +308,13 @@ class ProductService:
             except ValueError:
                 stock = 0
 
-            try:
-                cost_price = float(cost_price_str)
-            except ValueError:
-                cost_price = 0
+            # cost_price e margin são preenchidos manualmente (não estão no CSV)
+            cost_price = 0.0
+            margin = 0.0
 
-            try:
-                margin = float(margin_str)
-            except ValueError:
-                margin = 0
-
-            # Se margin=0 e cost_price=0, replicar price para cost_price
-            if margin == 0 and cost_price == 0:
-                cost_price = price
+            # Se category não estiver vazia, garantir que existe na tabela categories
+            if category:
+                await self._ensure_category_exists(category)
 
             existing = await self.get_by_ref(ref)
             try:
@@ -346,10 +352,34 @@ class ProductService:
         logger.info("CSV upsert: %d created, %d updated, %d errors", created, updated, len(errors))
         return {"created": created, "updated": updated, "errors": errors}
 
+    async def _ensure_category_exists(self, category_name: str) -> None:
+        """Garante que a categoria existe na tabela categories. Cria se não existir."""
+        if not category_name:
+            return
+        async with aiosqlite.connect(self.db_path) as db:
+            # Verificar se já existe
+            async with db.execute(
+                "SELECT id FROM categories WHERE name = ?", (category_name,)
+            ) as cursor:
+                exists = await cursor.fetchone()
+                if exists:
+                    return
+            # Criar categoria se não existir
+            try:
+                await db.execute(
+                    "INSERT INTO categories (name, description) VALUES (?, ?)",
+                    (category_name, ""),
+                )
+                await db.commit()
+                logger.info("Auto-created category: %s", category_name)
+            except aiosqlite.IntegrityError:
+                # Categoria já foi criada por outra thread
+                pass
+
     async def seed_from_csv(self, csv_path: str) -> int:
         """Importa produtos do CSV para o SQLite. Retorna quantidade importada.
 
-        Formato CSV: ref,description,price,stock
+        Formato CSV: ref,description,price,stock,manufacturer,material,size,category
         """
         import os
         if not os.path.exists(csv_path):
@@ -367,6 +397,10 @@ class ProductService:
                 desc = row[1].strip()
                 price_str = row[2].strip().replace(",", ".")
                 stock_str = row[3].strip() if len(row) > 3 else "0"
+                manufacturer = row[4].strip() if len(row) > 4 else ""
+                material = row[5].strip() if len(row) > 5 else ""
+                size = row[6].strip() if len(row) > 6 else ""
+                category = row[7].strip() if len(row) > 7 else ""
 
                 try:
                     price = float(price_str)
@@ -378,8 +412,12 @@ class ProductService:
                 except ValueError:
                     stock = 0
 
-                # Se margin=0, cost_price deve ser igual ao price
+                # cost_price = price (margem 0 por padrão)
                 cost_price = price
+
+                # Garantir que categoria existe
+                if category:
+                    await self._ensure_category_exists(category)
 
                 # Skip if already exists
                 existing = await self.get_by_ref(ref)
@@ -394,7 +432,10 @@ class ProductService:
                         cost_price=cost_price,
                         margin=0,
                         stock=stock,
-                        category="",
+                        category=category,
+                        manufacturer=manufacturer,
+                        material=material,
+                        size=size,
                     )
                     count += 1
                 except Exception as e:

@@ -53,7 +53,7 @@ class RAGConfig(BaseSettings):
     """Configuration for RAG service."""
 
     docs_dir: str = Field(default="docs")
-    csv_path: str = Field(default="assets/produtos.csv")
+    csv_path: str = Field(default="assets/produtos_completo.csv")
     chunk_size: int = Field(default=500)
     chunk_overlap: int = Field(default=50)
 

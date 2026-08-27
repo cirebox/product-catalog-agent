@@ -7,6 +7,7 @@ import logging
 import os
 from typing import List, Optional
 
+from ..prompts.system_prompt import SYSTEM_PROMPT
 from ..utils.config import Config
 
 logger = logging.getLogger(__name__)
@@ -58,17 +59,15 @@ class LLMService:
             response = llm.invoke(
                 [
                     SystemMessage(
-                        content=(
-                            "Você é a Maria assistente de atendimento de uma loja de lingerie. "
-                            "Regras obrigatórias:\n"
-                            "- Responda sempre em português (PT-BR).\n"
-                            "- Seja curto e amigável: no máximo 2 frases.\n"
-                            "- Não explique detalhes técnicos do erro nem exponha informações internas do sistema.\n"
-                            "- Assuma a culpa pela falha (nunca culpe o cliente ou a mensagem enviada).\n\n"
-                            "Contexto: ocorreu um erro inesperado ao processar a solicitação do cliente. "
-                            "Informe brevemente que houve um problema temporário, peça desculpas e sugira tentar novamente "
-                            "em instantes ou reformular a mensagem."
-                        )
+                        content=SYSTEM_PROMPT + "\n\n"
+                        "REGRAS PARA ERROS:\n"
+                        "- Responda sempre em português (PT-BR).\n"
+                        "- Seja curto e amigável: no máximo 2 frases.\n"
+                        "- Não explique detalhes técnicos do erro nem exponha informações internas do sistema.\n"
+                        "- Assuma a culpa pela falha (nunca culpe o cliente ou a mensagem enviada).\n\n"
+                        "Contexto: ocorreu um erro inesperado ao processar a solicitação do cliente. "
+                        "Informe brevemente que houve um problema temporário, peça desculpas e sugira tentar novamente "
+                        "em instantes ou reformular a mensagem."
                     ),
                     HumanMessage(
                         content=f'O usuário enviou: "{user_message}" e ocorreu um erro ao processar essa solicitação.'
@@ -106,19 +105,17 @@ class LLMService:
             response = llm.invoke(
                 [
                     SystemMessage(
-                        content=(
-                            "Você é a Maria assistente de atendimento de uma loja de lingerie. "
-                            "Regras obrigatórias:\n"
-                            "- Responda sempre em português (PT-BR).\n"
-                            "- Seja curto, amigável e direto: no máximo 2 frases.\n"
-                            "- Nunca invente informações sobre produtos, preços ou prazos.\n\n"
-                            "Contexto: o cliente enviou uma mensagem que não foi compreendida. "
-                            "Use o histórico da conversa para inferir a intenção mais provável. "
-                            "Se o histórico não for suficiente para entender o que ele quer, "
-                            "pergunte educadamente o que ele precisa, sem tentar adivinhar.\n\n"
-                            "Sempre finalize oferecendo 2 ou 3 exemplos práticos do que você pode ajudar, "
-                            "como: ver produtos, consultar preço, ver guia de medidas ou falar sobre formas de pagamento."
-                        )
+                        content=SYSTEM_PROMPT + "\n\n"
+                        "REGRAS PARA CLARIFICAÇÃO CONTEXTUAL:\n"
+                        "- Responda sempre em português (PT-BR).\n"
+                        "- Seja curto, amigável e direto: no máximo 2 frases.\n"
+                        "- Nunca invente informações sobre produtos, preços ou prazos.\n\n"
+                        "Contexto: o cliente enviou uma mensagem que não foi compreendida. "
+                        "Use o histórico da conversa para inferir a intenção mais provável. "
+                        "Se o histórico não for suficiente para entender o que ele quer, "
+                        "pergunte educadamente o que ele precisa, sem tentar adivinhar.\n\n"
+                        "Sempre finalize oferecendo 2 ou 3 exemplos práticos do que você pode ajudar, "
+                        "como: ver produtos, consultar preço, ver guia de medidas ou falar sobre formas de pagamento."
                     ),
                     HumanMessage(
                         content=(
