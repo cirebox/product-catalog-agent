@@ -2,6 +2,7 @@
 Tests for RAGService with ChromaDB.
 """
 
+import csv
 import os
 import tempfile
 
@@ -50,6 +51,42 @@ def rag_service(sample_csv, sample_docs):
         yield service
 
 
+def _load_products_from_csv(csv_path: str) -> list[dict]:
+    """Helper to load products from CSV as list of dicts."""
+    products = []
+    if not os.path.exists(csv_path):
+        return products
+
+    with open(csv_path, "r", encoding="utf-8") as f:
+        reader = csv.DictReader(f, delimiter=";")
+        for row in reader:
+            ref = row.get("ref", "").strip()
+            desc = row.get("descrição", "").strip()
+            price_str = row.get("preço", "0").strip().replace(",", ".")
+            stock_str = row.get("estoque", "0").strip()
+
+            try:
+                price = float(price_str)
+            except ValueError:
+                price = 0.0
+            try:
+                stock = int(stock_str)
+            except ValueError:
+                stock = 0
+
+            products.append({
+                "ref": ref,
+                "description": desc,
+                "price": price,
+                "stock": stock,
+                "manufacturer": "",
+                "material": "",
+                "size": "",
+                "category": "",
+            })
+    return products
+
+
 class TestRAGService:
     """Tests for RAG service with ChromaDB."""
 
@@ -62,17 +99,20 @@ class TestRAGService:
         docs = rag_service._load_markdown_docs()
         assert len(docs) >= 1
 
-    def test_load_and_index(self, rag_service):
-        num_chunks = rag_service.load_and_index()
+    def test_load_products_from_sqlite(self, rag_service, sample_csv):
+        products = _load_products_from_csv(sample_csv)
+        num_chunks = rag_service.load_products_from_sqlite(products)
         assert num_chunks > 0
 
-    def test_search(self, rag_service):
-        rag_service.load_and_index()
+    def test_search(self, rag_service, sample_csv):
+        products = _load_products_from_csv(sample_csv)
+        rag_service.load_products_from_sqlite(products)
         results = rag_service.search("conjunto")
         assert len(results) > 0
 
-    def test_get_relevant_context(self, rag_service):
-        rag_service.load_and_index()
+    def test_get_relevant_context(self, rag_service, sample_csv):
+        products = _load_products_from_csv(sample_csv)
+        rag_service.load_products_from_sqlite(products)
         context = rag_service.get_relevant_context("tanga")
         assert "TANGA" in context or "tanga" in context.lower()
 
@@ -95,7 +135,8 @@ class TestRAGService:
                 persist_dir=persist_dir,
                 collection_name="persist_test",
             )
-            service1.load_and_index()
+            products = _load_products_from_csv(sample_csv)
+            service1.load_products_from_sqlite(products)
             assert service1.get_collection_stats()["count"] > 0
 
             # Create second instance with same persist_dir

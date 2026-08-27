@@ -148,3 +148,76 @@ Use template-based responses with RAG context injection.
 - RAG context provides dynamic information
 - Templates can be parameterized for variation
 - Personalization can be added later via user profile
+
+---
+
+# ADR-005: Latency Observability with Per-Node Timing
+
+## Status
+
+Accepted
+
+## Context
+
+For the technical challenge, we need to demonstrate latency measurements (p50/p95) with ≥20 questions. The existing MetricsCollector was unused and lacked percentile calculations. We need end-to-end latency tracking plus per-node timing in the LangGraph graph.
+
+## Decision
+
+1. Instrument each LangGraph node (classify, route, agent) with timing
+2. Store node timings in AgentState alongside other fields
+3. Integrate MetricsCollector into the server middleware
+4. Add `/metrics/latency` endpoint with percentile calculations
+
+## Consequences
+
+### Positive
+- **Non-invasive**: Timing added via state, no changes to graph structure
+- **Granular**: Can identify bottleneck nodes (classify vs agent)
+- **Standards-based**: p50/p95/p99 are industry-standard metrics
+- **No performance impact**: Timing uses `time.monotonic()` (<1μs overhead)
+
+### Negative
+- **State growth**: AgentState gains one more field
+- **Memory**: MetricsCollector stores traces in memory (capped at 5000)
+
+### Mitigations
+- State field is lightweight (dict of floats)
+- Trace cap prevents memory growth
+- Can be disabled in production if needed
+
+---
+
+# ADR-006: Load Testing Strategy with Locust
+
+## Status
+
+Accepted
+
+## Context
+
+We need to demonstrate scalability with numerical evidence. The system must handle concurrent users without degrading below acceptable thresholds.
+
+## Decision
+
+Use Locust for load testing with:
+- Simulated users sending chat messages
+- Weighted task distribution (chat > products > health)
+- Configurable user counts (1, 5, 10, 20, 50)
+- CSV output for analysis
+
+## Consequences
+
+### Positive
+- **Realistic**: Simulates actual user behavior patterns
+- **Scalable**: Can test from 1 to 1000+ users
+- **Observable**: Web UI shows real-time metrics
+- **Reproducible**: CSV output enables consistent analysis
+
+### Negative
+- **Setup**: Requires Locust installation
+- **Network**: Results affected by network latency in local tests
+
+### Mitigations
+- Locust is a dev dependency (`pip install locust`)
+- Run Locust on same machine as server for baseline
+- Use `--host` flag to point to any environment

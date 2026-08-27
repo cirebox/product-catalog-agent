@@ -23,6 +23,10 @@ class TestIntentClassifier:
         assert classifier.classify("quero ver os produtos") == Intent.PRODUCT_INFO
         assert classifier.classify("me mostra o catálogo") == Intent.PRODUCT_INFO
 
+    def test_product_count(self, classifier):
+        assert classifier.classify("quantos produtos temos?") == Intent.PRODUCT_COUNT
+        assert classifier.classify("qual o total de produtos?") == Intent.PRODUCT_COUNT
+
     def test_pricing(self, classifier):
         assert classifier.classify("quanto custa?") == Intent.PRICING
         assert classifier.classify("qual o preço?") == Intent.PRICING
