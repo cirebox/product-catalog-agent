@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Histórico de Vendas</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-profile">
+                <div class="header-title">
+                    <span class="app-name">Histórico de Vendas</span>
+                    <div class="header-info">
+                        <span class="header-status online">Ativo</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="pdv-main">
+
+            <!-- Tela 1: Lista de Vendas -->
+            <section class="card" id="section-list">
+                <!-- Filtros de Data -->
+                <div class="date-filter">
+                    <div class="form-group">
+                        <label>Data Início</label>
+                        <input type="date" id="filter-date-from">
+                    </div>
+                    <div class="form-group">
+                        <label>Data Fim</label>
+                        <input type="date" id="filter-date-to">
+                    </div>
+                    <div class="form-group">
+                        <label>Status</label>
+                        <select id="filter-status">
+                            <option value="">Todos</option>
+                            <option value="pago">Pago</option>
+                            <option value="pendente">Pendente</option>
+                        </select>
+                    </div>
+                    <button type="button" class="btn btn-primary" onclick="loadSales(1)">Filtrar</button>
+                    <button type="button" class="btn btn-secondary" onclick="clearFilters()">Limpar</button>
+                </div>
+
+                <!-- Resumo -->
+                <div class="summary-cards" id="summary-cards"></div>
+
+                <!-- Lista de Vendas -->
+                <div id="sales-list" class="customer-list"></div>
+                <div id="pagination" class="pagination"></div>
+            </section>
+
+            <!-- Tela 2: Detalhe da Venda (Modal) -->
+            <div class="modal hidden" id="modal-detail">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>🧾 Detalhe da Venda</h3>
+                        <button class="btn-close" onclick="closeModal('modal-detail')">✕</button>
+                    </div>
+                    <div class="modal-body" id="sale-detail-content"></div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" onclick="closeModal('modal-detail')">Fechar</button>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script src="/static/debounce.js"></script>
+    <script src="/static/nav.js"></script>
+    <script>renderNav("historico");</script>
+    <script src="/static/historico.js"></script>
+</body>
+</html>

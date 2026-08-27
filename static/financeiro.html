@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cobranças</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-profile">
+                <div class="header-title">
+                    <span class="app-name">Cobranças</span>
+                    <div class="header-info">
+                        <span class="header-status online">Ativo</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="pdv-main">
+
+            <!-- Resumo Geral -->
+            <section class="card">
+                <h2 class="card-title">📊 Resumo</h2>
+                <div class="summary-cards" id="summary-cards"></div>
+            </section>
+
+            <!-- Filtro -->
+            <section class="card">
+                <div class="form-row">
+                    <div class="form-group" style="flex:1">
+                        <input type="text" id="search-input" placeholder="Buscar cliente..." oninput="debounceSearch()">
+                    </div>
+                    <select id="filter-status" onchange="renderList()">
+                        <option value="">Todos</option>
+                        <option value="atrasado">🔴 Atrasados</option>
+                        <option value="em_dia">🟢 Em dia</option>
+                    </select>
+                </div>
+            </section>
+
+            <!-- Lista de Clientes Devendo -->
+            <section class="card">
+                <h2 class="card-title">👥 Clientes com Fiado Pendente</h2>
+                <div id="customers-list" class="customer-list"></div>
+            </section>
+
+            <!-- Botão Relatório -->
+            <section class="card">
+                <button type="button" class="btn btn-primary btn-full" onclick="generateReport()">
+                    📄 Gerar Relatório de Cobrança
+                </button>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- Modal: Detalhe do Cliente -->
+    <div class="modal hidden" id="modal-detail">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>👤 Detalhe do Cliente</h3>
+                <button class="btn-close" onclick="closeModal('modal-detail')">✕</button>
+            </div>
+            <div class="modal-body" id="detail-content"></div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('modal-detail')">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Relatório -->
+    <div class="modal hidden" id="modal-report">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📄 Relatório de Cobrança</h3>
+                <button class="btn-close" onclick="closeModal('modal-report')">✕</button>
+            </div>
+            <div class="modal-body">
+                <pre id="report-content" class="report-text"></pre>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('modal-report')">Fechar</button>
+                <button class="btn btn-primary" onclick="copyReport()">📋 Copiar</button>
+                <button class="btn btn-primary" onclick="shareWhatsApp()">📱 Enviar WhatsApp</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/debounce.js"></script>
+    <script src="/static/nav.js"></script>
+    <script>renderNav("financeiro");</script>
+    <script src="/static/financeiro.js"></script>
+</body>
+</html>

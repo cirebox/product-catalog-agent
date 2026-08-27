@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Feedback - RLHF</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <button class="hamburger-btn" id="menu-toggle" aria-label="Menu">
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+                    <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
+                </svg>
+            </button>
+            <div class="header-profile">
+                <div class="header-title">
+                    <span class="app-name">📊 Feedback (RLHF)</span>
+                </div>
+            </div>
+            <button class="btn btn-sm" onclick="exportFeedback()" title="Exportar dados">📥 Exportar</button>
+        </header>
+
+        <!-- Main Content -->
+        <main class="pdv-main">
+            <!-- Stats Cards -->
+            <div class="stats-grid">
+                <div class="card stats-card">
+                    <div class="stats-label">Taxa de Aprovação</div>
+                    <div class="stats-value" id="approval-rate">--</div>
+                    <div class="stats-detail" id="approval-detail">Carregando...</div>
+                </div>
+                <div class="card stats-card">
+                    <div class="stats-label">👍 Positivos</div>
+                    <div class="stats-value positive" id="positive-count">--</div>
+                    <div class="stats-detail" id="positive-pct">--</div>
+                </div>
+                <div class="card stats-card">
+                    <div class="stats-label">👎 Negativos</div>
+                    <div class="stats-value negative" id="negative-count">--</div>
+                    <div class="stats-detail" id="negative-pct">--</div>
+                </div>
+                <div class="card stats-card">
+                    <div class="stats-label">⚪ Sem Avaliar</div>
+                    <div class="stats-value neutral" id="implicit-count">--</div>
+                    <div class="stats-detail" id="implicit-pct">--</div>
+                </div>
+            </div>
+
+            <!-- By Intent Table -->
+            <div class="card">
+                <h3 class="card-title">📉 Aprovação por Intent</h3>
+                <div id="intent-table">
+                    <p class="text-muted">Carregando...</p>
+                </div>
+            </div>
+
+            <!-- Negative Feedback List -->
+            <div class="card">
+                <h3 class="card-title">👎 Respostas Negativas</h3>
+                <div id="negative-list">
+                    <p class="text-muted">Carregando...</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="/static/debounce.js"></script>
+    <script src="/static/nav.js"></script>
+    <script>renderNav("feedback");</script>
+    <script src="/static/feedback.js"></script>
+</body>
+</html>

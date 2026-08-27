@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Produtos</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-profile">
+                <div class="header-title">
+                    <span class="app-name">Produtos</span>
+                    <div class="header-info">
+                        <span class="header-status online">Ativo</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="pdv-main">
+
+            <!-- Tela 1: Lista de Produtos -->
+            <section class="card" id="section-list">
+                <div class="form-row">
+                    <div class="form-group" style="flex:1">
+                        <input type="text" id="search-input" placeholder="Buscar por ref ou descrição..." oninput="debounceSearch()">
+                    </div>
+                    <select id="filter-category" onchange="loadProducts()" style="width:140px">
+                        <option value="">Todas categorias</option>
+                    </select>
+                    <button type="button" class="btn" onclick="openCategoriesModal()" title="Categorias">🏷️</button>
+                    <button type="button" class="btn" onclick="openImportModal()" title="Importar CSV">📄</button>
+                    <button type="button" class="btn btn-primary" onclick="showNew()">+ Novo</button>
+                </div>
+
+                <div id="products-list" class="customer-list"></div>
+                <div id="pagination" class="pagination"></div>
+            </section>
+
+            <!-- Tela 2: Cadastro/Edição -->
+            <section class="card hidden" id="section-form">
+                <div class="card-header-row">
+                    <button type="button" class="btn-back" onclick="showList()">← Voltar</button>
+                    <h2 class="card-title" id="form-title">Novo Produto</h2>
+                </div>
+
+                <form id="product-form" class="form-grid">
+                    <div class="form-group">
+                        <label>Ref (código) *</label>
+                        <input type="text" id="form-ref" placeholder="CAL-001" required maxlength="50">
+                    </div>
+                    <div class="form-group">
+                        <label>Preço de Custo (R$) *</label>
+                        <input type="number" id="form-cost-price" step="0.01" min="0" placeholder="3.00" required oninput="calcPrice()">
+                    </div>
+                    <div class="form-group">
+                        <label>Margem de Lucro (%) *</label>
+                        <input type="number" id="form-margin" step="0.1" min="0" placeholder="66.7" required oninput="calcPrice()">
+                    </div>
+                    <div class="form-group">
+                        <label>Preço de Venda (R$) — calculado</label>
+                        <input type="number" id="form-price" step="0.01" min="0" placeholder="5.00" readonly style="opacity:0.7">
+                    </div>
+                    <div class="form-group full-width">
+                        <label>Descrição *</label>
+                        <input type="text" id="form-description" placeholder="Calça de renda preta" required maxlength="500">
+                    </div>
+                    <div class="form-group">
+                        <label>Estoque</label>
+                        <input type="number" id="form-stock" min="0" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Categoria</label>
+                        <select id="form-category">
+                            <option value="">Selecione...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Fabricante</label>
+                        <input type="text" id="form-manufacturer" placeholder="Marca">
+                    </div>
+                    <div class="form-group">
+                        <label>Material</label>
+                        <input type="text" id="form-material" placeholder="Renda, Algodão...">
+                    </div>
+                    <div class="form-group">
+                        <label>Tamanhos</label>
+                        <input type="text" id="form-size" placeholder="P, M, G">
+                    </div>
+                    <button type="submit" class="btn btn-primary" id="btn-submit">Salvar Produto</button>
+                </form>
+            </section>
+
+            <!-- Tela 3: Detalhes do Produto -->
+            <section class="card hidden" id="section-detail">
+                <div class="card-header-row">
+                    <button type="button" class="btn-back" onclick="showList()">← Voltar</button>
+                    <h2 class="card-title" id="detail-ref"></h2>
+                </div>
+
+                <div id="detail-info" class="product-detail-info"></div>
+
+                <div class="btn-group">
+                    <button type="button" class="btn btn-primary" onclick="editCurrent()">✏️ Editar</button>
+                    <button type="button" class="btn btn-secondary" onclick="openStockModal()">📦 Estoque</button>
+                    <button type="button" class="btn btn-danger" onclick="deleteCurrent()">🗑️ Excluir</button>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- Modal: Estoque -->
+    <div class="modal hidden" id="modal-stock">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📦 Gerenciar Estoque</h3>
+                <button class="btn-close" onclick="closeModal('modal-stock')">✕</button>
+            </div>
+            <div class="modal-body">
+                <p id="stock-current"></p>
+                <div class="form-group">
+                    <label>Quantidade para reduzir</label>
+                    <input type="number" id="stock-qty" min="1" value="1">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('modal-stock')">Cancelar</button>
+                <button class="btn btn-primary" onclick="confirmReduceStock()">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Confirmar Exclusão -->
+    <div class="modal hidden" id="modal-delete">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🗑️ Excluir Produto</h3>
+                <button class="btn-close" onclick="closeModal('modal-delete')">✕</button>
+            </div>
+            <div class="modal-body">
+                <p id="delete-info"></p>
+                <p class="text-danger">Esta ação não pode ser desfeita.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('modal-delete')">Cancelar</button>
+                <button class="btn btn-danger" onclick="confirmDelete()">Excluir</button>
+            </div>
+        </div>
+    </div>
+
+            <!-- Modal: Gerenciar Categorias -->
+            <div class="modal hidden" id="modal-categories">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>🏷️ Categorias</h3>
+                        <button class="btn-close" onclick="closeModal('modal-categories')">✕</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group" style="margin-bottom:12px">
+                            <input type="text" id="new-category-name" placeholder="Nome da categoria" maxlength="100">
+                        </div>
+                        <div class="form-group" style="margin-bottom:12px">
+                            <input type="text" id="new-category-description" placeholder="Descrição (opcional)" maxlength="500">
+                        </div>
+                        <div style="margin-bottom:12px">
+                            <button type="button" class="btn btn-primary btn-sm" onclick="addCategory()">Adicionar</button>
+                        </div>
+                        <div id="categories-list"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" onclick="closeModal('modal-categories')">Fechar</button>
+                    </div>
+                </div>
+            </div>
+
+    <!-- Modal: Importar CSV -->
+    <div class="modal hidden" id="modal-import">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📄 Importar CSV</h3>
+                <button class="btn-close" onclick="closeModal('modal-import')">✕</button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted text-sm">
+                    Formato: <code>ref,descrição,preço[,categoria,estoque,fabricante,material,tamanhos,custo,margem]</code><br>
+                    Ref existente será <strong>atualizada</strong>, nova será <strong>inserida</strong>.
+                </p>
+                <div class="form-group">
+                    <label>Arquivo CSV</label>
+                    <input type="file" id="csv-file" accept=".csv" style="padding:8px 0">
+                </div>
+                <div id="import-result" class="hidden"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('modal-import')">Fechar</button>
+                <button class="btn btn-primary" onclick="importCSV()" id="btn-import">Importar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/debounce.js"></script>
+    <script src="/static/nav.js"></script>
+    <script>renderNav("produtos");</script>
+    <script src="/static/produtos.js"></script>
+</body>
+</html>

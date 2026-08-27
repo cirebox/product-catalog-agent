@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PDV - Ponto de Venda</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-profile">
+                <div class="header-title">
+                    <span class="app-name">PDV - Ponto de Venda</span>
+                    <div class="header-info">
+                        <span class="header-status online">Ativo</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="pdv-main">
+
+            <!-- Tela 1: Selecionar Cliente -->
+            <section class="card" id="section-select-customer">
+                <h2 class="card-title">Iniciar Venda</h2>
+
+                <div class="form-group">
+                    <label>Buscar cliente por nome ou telefone</label>
+                    <input type="text" id="search-customer" placeholder="(11) 99999-8888 ou Maria..." autocomplete="off" oninput="debouncedSearch('search-customer', searchCustomer)">
+                </div>
+
+                <div id="search-results" class="result-box hidden"></div>
+
+                <h3 class="section-subtitle">Clientes recentes</h3>
+                <div id="recent-customers" class="customer-list"></div>
+
+                <div class="btn-group">
+                    <button type="button" class="btn btn-primary" onclick="showNewCustomerForm()">+ Novo Cliente</button>
+                    <button type="button" class="btn btn-secondary" onclick="startCashSale()">Venda sem cliente</button>
+                </div>
+            </section>
+
+            <!-- Tela 2: Cadastro de Cliente -->
+            <section class="card hidden" id="section-new-customer">
+                <div class="card-header-row">
+                    <button type="button" class="btn-back" onclick="showSelectCustomer()">← Voltar</button>
+                    <h2 class="card-title">Novo Cliente</h2>
+                </div>
+
+                <form id="new-customer-form" class="form-grid">
+                    <div class="form-group">
+                        <label>Nome *</label>
+                        <input type="text" id="new-name" placeholder="Maria da Silva" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Telefone *</label>
+                        <input type="text" id="new-phone" placeholder="(11) 99876-5432" required>
+                    </div>
+                    <div class="form-group">
+                        <label>E-mail (opcional)</label>
+                        <input type="email" id="new-email" placeholder="maria@email.com">
+                    </div>
+                    <div class="form-group full-width">
+                        <label>Observação inicial (opcional)</label>
+                        <textarea id="new-note" rows="3" placeholder="Ex: Prefere cores escuras, sempre pede tamanho M..."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Salvar Cliente</button>
+                </form>
+            </section>
+
+            <!-- Tela 3: Venda com Cliente -->
+            <section class="card hidden" id="section-sale">
+                <div class="customer-badge" id="customer-badge">
+                    <span id="customer-badge-text"></span>
+                    <button type="button" class="btn-sm" onclick="showSelectCustomer()">Trocar cliente</button>
+                </div>
+
+                <!-- Alertas do cliente -->
+                <div id="customer-alerts" class="hidden"></div>
+
+                <h3 class="section-subtitle">Itens da Venda</h3>
+
+                <div class="form-row">
+                    <div class="form-group" style="flex:1">
+                        <label>Ref do Produto</label>
+                        <input type="text" id="item-ref" placeholder="Código ou descrição" oninput="debouncedSearch('item-ref', lookupItem)">
+                    </div>
+                    <div class="form-group" style="width:80px">
+                        <label>Qtd</label>
+                        <input type="number" id="item-qty" min="1" value="1">
+                    </div>
+                    <button type="button" class="btn" onclick="lookupItem()">Buscar</button>
+                </div>
+
+                <div id="item-preview" class="result-box hidden"></div>
+
+                <div id="sale-items-list" class="sale-items-list"></div>
+
+                <div class="sale-summary">
+                    <div class="summary-row">
+                        <span>Subtotal:</span>
+                        <span id="sale-subtotal">R$ 0,00</span>
+                    </div>
+                    <div class="form-row" style="align-items:center">
+                        <span>Desconto:</span>
+                        <input type="number" id="sale-discount" min="0" step="0.01" value="0" style="width:100px" onchange="updateSaleTotal()">
+                    </div>
+                    <div class="summary-row total">
+                        <span>Total:</span>
+                        <span id="sale-total">R$ 0,00</span>
+                    </div>
+                </div>
+
+                <h3 class="section-subtitle">Pagamento</h3>
+
+                <div class="form-row">
+                    <div class="form-group" style="flex:1">
+                        <label>Método</label>
+                        <select id="payment-method" onchange="togglePaymentDays()">
+                            <option value="pix">PIX</option>
+                            <option value="cartao">Cartão</option>
+                            <option value="dinheiro">Dinheiro</option>
+                            <option value="prazo">Prazo</option>
+                        </select>
+                    </div>
+                    <div class="form-group hidden" id="payment-days-group" style="flex:1">
+                        <label>Prazo</label>
+                        <select id="payment-days">
+                            <option value="15">15 dias</option>
+                            <option value="30" selected>30 dias</option>
+                            <option value="60">60 dias</option>
+                            <option value="90">90 dias</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button type="button" class="btn btn-primary btn-full" onclick="registerSale()" id="btn-register-sale">Registrar Venda</button>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- Modal: Marcar Pago -->
+    <div class="modal hidden" id="modal-pay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Marcar como Pago</h3>
+                <button class="btn-close" onclick="closeModal('modal-pay')">✕</button>
+            </div>
+            <div class="modal-body">
+                <p id="pay-sale-info"></p>
+                <div class="form-group">
+                    <label>Data do Pagamento</label>
+                    <input type="date" id="pay-date">
+                </div>
+                <div class="form-group">
+                    <label>Valor Pago</label>
+                    <input type="number" id="pay-amount" step="0.01" min="0.01">
+                </div>
+                <div class="form-group">
+                    <label>Método</label>
+                    <select id="pay-method">
+                        <option value="pix">PIX</option>
+                        <option value="cartao">Cartão</option>
+                        <option value="dinheiro">Dinheiro</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('modal-pay')">Cancelar</button>
+                <button class="btn btn-primary" onclick="confirmPayment()">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/debounce.js"></script>
+    <script src="/static/nav.js"></script>
+    <script>renderNav("pdv");</script>
+    <script src="/static/pdv.js?v=3"></script>
+</body>
+</html>

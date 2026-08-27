@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Clientes</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-profile">
+                <div class="header-title">
+                    <span class="app-name">Clientes</span>
+                    <div class="header-info">
+                        <span class="header-status online">Ativo</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="pdv-main">
+
+            <!-- Tela 1: Lista de Clientes -->
+            <section class="card" id="section-list">
+                <div class="form-row">
+                    <div class="form-group" style="flex:1">
+                        <input type="text" id="search-input" placeholder="Buscar por nome ou telefone..." oninput="debounceSearch()">
+                    </div>
+                    <button type="button" class="btn btn-primary" onclick="showNewCustomer()">+ Novo</button>
+                </div>
+
+                <div id="customers-list" class="customer-list"></div>
+            </section>
+
+            <!-- Tela 2: Cadastro -->
+            <section class="card hidden" id="section-new">
+                <div class="card-header-row">
+                    <button type="button" class="btn-back" onclick="showList()">← Voltar</button>
+                    <h2 class="card-title">Novo Cliente</h2>
+                </div>
+
+                <form id="new-form" class="form-grid">
+                    <div class="form-group">
+                        <label>Nome *</label>
+                        <input type="text" id="form-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Telefone *</label>
+                        <input type="text" id="form-phone" required>
+                    </div>
+                    <div class="form-group">
+                        <label>E-mail</label>
+                        <input type="email" id="form-email">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Salvar</button>
+                </form>
+            </section>
+
+            <!-- Tela 3: Detalhes do Cliente -->
+            <section class="card hidden" id="section-detail">
+                <div class="card-header-row">
+                    <button type="button" class="btn-back" onclick="showList()">← Voltar</button>
+                    <h2 class="card-title" id="detail-name"></h2>
+                </div>
+
+                <div class="customer-detail-info" id="detail-info"></div>
+
+                <!-- Tabs -->
+                <div class="tabs">
+                    <button class="tab active" data-tab="history" onclick="switchTab('history')">📋 Histórico</button>
+                    <button class="tab" data-tab="notes" onclick="switchTab('notes')">📝 Observações</button>
+                    <button class="tab" data-tab="credit" onclick="switchTab('credit')">💰 Fiado</button>
+                </div>
+
+                <!-- Tab: History -->
+                <div class="tab-content active" id="tab-history"></div>
+
+                <!-- Tab: Notes -->
+                <div class="tab-content" id="tab-notes"></div>
+
+                <!-- Tab: Credit -->
+                <div class="tab-content" id="tab-credit"></div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- Modal: Nova Observação -->
+    <div class="modal hidden" id="modal-note">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📝 Nova Observação</h3>
+                <button class="btn-close" onclick="closeModal('modal-note')">✕ Fechar</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Tipo:</label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="note-type" value="observacao" checked> Observação geral</label>
+                        <label><input type="radio" name="note-type" value="preferencia"> Preferência</label>
+                        <label><input type="radio" name="note-type" value="pedido_especial"> Pedido especial</label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Conteúdo:</label>
+                    <textarea id="note-content" rows="4" placeholder="Descreva a observação..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="note-pinned"> 📌 Fixar no topo do perfil
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="saveNote()">✅ Salvar Observação</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/debounce.js"></script>
+    <script src="/static/nav.js"></script>
+    <script>renderNav("clientes");</script>
+    <script src="/static/clientes.js"></script>
+</body>
+</html>
